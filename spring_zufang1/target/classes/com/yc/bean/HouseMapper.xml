@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yc.bean.HouseMapper">
+
+	<!-- 添加房屋信息 -->
+	<insert id="saveHouse" parameterType="House" keyProperty="id" useGeneratedKeys="true">
+			insert into house(USER_ID,TYPE_ID,TITLE,DESCRIPTION,PRICE,PUBDATE,FLOORAGE,CONTACT,STREET_ID)
+			values(#{user_id},#{type_id},#{title},#{description},#{price},
+			now(),#{floorage},#{contact},#{street_id})
+	</insert>
+	
+	<!-- 更新房屋信息 -->
+	<update id="updateHouse" parameterType="House">
+		update house set title = #{title},description = #{description} ,price = #{price},
+		pubDate = now(),floorage = #{floorage},contact = #{contact},user_id = #{user_id},
+		type_id = #{type_id},street_id = #{street_id}
+		where id= #{id}
+	</update>
+	
+	<!-- 各种查询条件的拼接 -->
+	<sql id="conditionSql">
+		from house
+		<where>
+			<if test="title !=null and title != ''">
+				title like '%${title}%'
+			</if>
+			<if test="minPrice !=null and maxPrice != null">
+				and (price between #{minPrice} and #{maxPrice})
+			</if>
+			<if	test="minFloorages !=null and maxFloorages!=null">
+				and (floorage between #{minFloorage} and #{maxFloorage})
+			</if>
+			<if test="typeId !=null and typeId !=''">
+				and type_id = #{typeId}
+			</if>
+			<if test="districtId != null and districtId!=''">
+				and district_id = #{districtId}
+			</if>
+			<if test="id!=null and id !=''">
+				and id=#{id}
+			</if>			
+		</where>
+	</sql>
+	
+	<!-- 排序条件的拼接 -->
+	<sql id="orderSql">
+		<if test="orderby!=null and orderby != ''">
+			order by #{orderby}
+			<if test="orderway!=null and orderway!= ''">
+				#{orderway}
+			</if>
+		</if>
+	</sql>
+	
+	<!-- 分页条件的拼接 -->
+	<sql id="pageSql">
+		<if test="start!=null ">
+			limit #{start},#{pagesize}
+		</if>
+	</sql>	
+	
+	<!-- 带查询条件,分页条件,排序条件的查询-->
+	<select id="findHouseCondition" parameterType="java.util.Map" resultType="House">
+		select * <include refid="conditionSql"/> <include refid="orderSql"/><include refid="pageSql"/>
+	</select>
+	<!--  带查询条件统计查询-->
+	<select id="findHouseConditionCount" parameterType="java.util.Map" resultType="int">
+		select count(1) <include refid="conditionSql"/>
+	</select>
+	
+	<!-- 根据id删除单条信息 -->
+	<delete id="delSingleHouse">
+		delete from house where id = #{id}
+	</delete>
+	
+	<!-- 根据id删除多条信息 -->
+	<delete id="delMutilHouse" parameterType="House">
+		delete from house where id in
+		<foreach collection="list" open="(" close=")" separator="," item="house">
+			#{tag.tid}
+		</foreach>
+	</delete>
+	
+</mapper>
